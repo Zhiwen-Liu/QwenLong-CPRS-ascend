@@ -9,7 +9,7 @@ import os
 import logging
 from transformers import AutoTokenizer, AutoConfig
 import torch
-
+import torch_npu
 from exceptions import *
 
 from dataset import build_request_samples
@@ -182,7 +182,7 @@ def clean_preds(keywords, return_offset):
     return new_keywords
 
 
-device = torch.device("cuda:0")
+device = torch.device("npu" if torch.npu.is_available() else "cpu")
 
 tokenizer = AutoTokenizer.from_pretrained(model_dir)
 tokenizer.add_special_tokens({'pad_token': tokenizer.eos_token})
@@ -210,9 +210,7 @@ def call_model(messages):
     input_ids = input_ids + input_ids_context
     input_ids = torch.LongTensor([input_ids]).to(device)
     #input_ids = torch.cat((input_ids, input_ids), dim=0).to(device)
-    
     attention_mask = torch.ones_like(input_ids).to(device)
-
     outputs = model(input_ids,attention_mask).detach().cpu().numpy().tolist()
 
     return outputs

@@ -244,7 +244,15 @@ class Qwen2Model(Qwen2PreTrainedModel):
         expanded_mask = ori_mask.unsqueeze(1).unsqueeze(2).expand(batch_size, 1, seq_len, seq_len)
 
         # 根据 ori_mask 的值设置 expanded_mask
-        attention_mask = torch.where(expanded_mask == 1, torch.tensor(0.0, dtype=input_embs.dtype),torch.finfo(input_embs.dtype).min).to(ori_mask.device)
+        device = input_embs.device
+        dtype = input_embs.dtype
+
+        attention_mask = torch.where(
+            expanded_mask == 1,
+            torch.tensor(0.0, device=device, dtype=dtype),
+            torch.tensor(torch.finfo(dtype).min, device=device, dtype=dtype)
+        )
+        #attention_mask = torch.where(expanded_mask == 1, torch.tensor(0.0, dtype=input_embs.dtype),torch.finfo(input_embs.dtype).min).to(ori_mask.device)
 
         return attention_mask
 
